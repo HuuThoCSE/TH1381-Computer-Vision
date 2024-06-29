@@ -1,0 +1,210 @@
+<html>
+<head>
+<title>RunCode2.ipynb</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #8c8c8c; font-style: italic;}
+.s1 { color: #0033b3;}
+.s2 { color: #080808;}
+.s3 { color: #067d17;}
+.s4 { color: #0037a6;}
+.s5 { color: #1750eb;}
+</style>
+</head>
+<body bgcolor="#ffffff">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#c0c0c0" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+RunCode2.ipynb</font>
+</center></td></tr></table>
+<pre><span class="s0">#%% 
+</span><span class="s1">import </span><span class="s2">cv2</span>
+<span class="s1">import </span><span class="s2">numpy </span><span class="s1">as </span><span class="s2">np</span>
+<span class="s1">import </span><span class="s2">matplotlib.pyplot </span><span class="s1">as </span><span class="s2">plt</span>
+
+<span class="s0"># Đọc các hình ảnh</span>
+<span class="s2">img1 = cv2.imread(</span><span class="s3">'D:</span><span class="s4">\\</span><span class="s3">CoVi_OnThi</span><span class="s4">\\</span><span class="s3">HuuTho_Week8</span><span class="s4">\\</span><span class="s3">panorama1.jpg'</span><span class="s2">)</span>
+<span class="s2">img2 = cv2.imread(</span><span class="s3">'D:</span><span class="s4">\\</span><span class="s3">CoVi_OnThi</span><span class="s4">\\</span><span class="s3">HuuTho_Week8</span><span class="s4">\\</span><span class="s3">panorama2.jpg'</span><span class="s2">)</span>
+
+<span class="s0"># Danh sách ảnh và kiểm tra tải thành công</span>
+<span class="s2">images = [img1, img2]</span>
+<span class="s2">all_images_loaded = </span><span class="s1">True  </span><span class="s0"># Giả sử tất cả ảnh được tải thành công</span>
+
+<span class="s0"># Sử dụng SIFT để tìm điểm đặc trưng</span>
+<span class="s2">sift = cv2.SIFT_create()</span>
+<span class="s2">keypoints = []  </span><span class="s0"># Danh sách lưu trữ các điểm đặc trưng của từng ảnh</span>
+<span class="s2">descriptors = []  </span><span class="s0"># Danh sách lưu trữ các mô tả của từng ảnh</span>
+
+<span class="s1">for </span><span class="s2">i, img </span><span class="s1">in </span><span class="s2">enumerate(images, start=</span><span class="s5">1</span><span class="s2">):</span>
+    <span class="s1">if </span><span class="s2">img </span><span class="s1">is None</span><span class="s2">:</span>
+        <span class="s2">print(</span><span class="s3">f&quot;Không thể tải ảnh số </span><span class="s4">{</span><span class="s2">i</span><span class="s4">}</span><span class="s3">&quot;</span><span class="s2">)</span>
+        <span class="s2">all_images_loaded = </span><span class="s1">False</span>
+    <span class="s1">else</span><span class="s2">:</span>
+        <span class="s2">kp, des = sift.detectAndCompute(img, </span><span class="s1">None</span><span class="s2">)  </span><span class="s0"># Phát hiện và mô tả các điểm đặc trưng</span>
+        <span class="s2">keypoints.append(kp)</span>
+        <span class="s2">descriptors.append(des)</span>
+        <span class="s2">img_with_kp = cv2.drawKeypoints(img, kp, </span><span class="s1">None</span><span class="s2">)  </span><span class="s0"># Vẽ các điểm đặc trưng lên ảnh</span>
+        <span class="s2">plt.imshow(cv2.cvtColor(img_with_kp, cv2.COLOR_BGR2RGB))  </span><span class="s0"># Hiển thị ảnh với điểm đặc trưng</span>
+        <span class="s2">plt.title(</span><span class="s3">f'Ảnh số </span><span class="s4">{</span><span class="s2">i</span><span class="s4">} </span><span class="s3">với điểm đặc trưng'</span><span class="s2">)</span>
+        <span class="s2">plt.show()</span>
+        <span class="s2">print(</span><span class="s3">f&quot;Số điểm đặc trưng trong ảnh số </span><span class="s4">{</span><span class="s2">i</span><span class="s4">}</span><span class="s3">: </span><span class="s4">{</span><span class="s2">len(kp)</span><span class="s4">}</span><span class="s3">&quot;</span><span class="s2">)</span>
+
+<span class="s0"># Chỉ tiếp tục nếu tất cả ảnh đã được tải thành công</span>
+<span class="s1">if </span><span class="s2">all_images_loaded:</span>
+    <span class="s0"># Sử dụng BFMatcher để so khớp điểm đặc trưng giữa các cặp ảnh</span>
+    <span class="s2">bf = cv2.BFMatcher()</span>
+    <span class="s2">matches = bf.knnMatch(descriptors[</span><span class="s5">0</span><span class="s2">], descriptors[</span><span class="s5">1</span><span class="s2">], k=</span><span class="s5">2</span><span class="s2">)  </span><span class="s0"># So khớp các mô tả của hai ảnh</span>
+    
+    <span class="s0"># Áp dụng Low's ratio test</span>
+    <span class="s2">good = []</span>
+    <span class="s1">for </span><span class="s2">m, n </span><span class="s1">in </span><span class="s2">matches:</span>
+        <span class="s1">if </span><span class="s2">m.distance &lt; </span><span class="s5">0.75 </span><span class="s2">* n.distance:  </span><span class="s0"># Kiểm tra tỉ lệ khoảng cách để loại bỏ các kết quả không tốt</span>
+            <span class="s2">good.append(m)</span>
+    <span class="s2">print(</span><span class="s3">f&quot;Số matches tốt giữa ảnh 1 và ảnh 2: </span><span class="s4">{</span><span class="s2">len(good)</span><span class="s4">}</span><span class="s3">&quot;</span><span class="s2">)</span>
+
+    <span class="s0"># Khởi tạo Stitcher với cấu hình tùy chỉnh</span>
+    <span class="s2">stitcher = cv2.Stitcher_create()</span>
+    <span class="s2">stitcher.setPanoConfidenceThresh(</span><span class="s5">0.6</span><span class="s2">)  </span><span class="s0"># Điều chỉnh ngưỡng tin cậy</span>
+
+    <span class="s0"># Thực hiện ghép ảnh</span>
+    <span class="s2">ret, pano = stitcher.stitch(images)  </span><span class="s0"># Ghép các hình ảnh lại với nhau</span>
+
+    <span class="s1">if </span><span class="s2">ret == cv2.Stitcher_OK:</span>
+        <span class="s0"># Hiển thị ảnh toàn cảnh</span>
+        <span class="s2">plt.imshow(cv2.cvtColor(pano, cv2.COLOR_BGR2RGB))</span>
+        <span class="s2">plt.title(</span><span class="s3">'Ảnh toàn cảnh'</span><span class="s2">)</span>
+        <span class="s2">plt.axis(</span><span class="s3">'off'</span><span class="s2">)</span>
+        <span class="s2">plt.show()</span>
+    <span class="s1">else</span><span class="s2">:</span>
+        <span class="s2">print(</span><span class="s3">&quot;Ghép ảnh thất bại, mã lỗi:&quot;</span><span class="s2">, ret)</span>
+<span class="s1">else</span><span class="s2">:</span>
+    <span class="s2">print(</span><span class="s3">&quot;Một hoặc nhiều ảnh không được tải lên thành công, kiểm tra lại đường dẫn hoặc tên file.&quot;</span><span class="s2">)</span>
+
+<span class="s0">#%% 
+</span><span class="s1">import </span><span class="s2">cv2</span>
+<span class="s1">import </span><span class="s2">numpy </span><span class="s1">as </span><span class="s2">np</span>
+<span class="s1">import </span><span class="s2">matplotlib.pyplot </span><span class="s1">as </span><span class="s2">plt</span>
+
+<span class="s0"># Đọc các hình ảnh</span>
+<span class="s2">img1 = cv2.imread(</span><span class="s3">'D:</span><span class="s4">\\</span><span class="s3">CoVi_OnThi</span><span class="s4">\\</span><span class="s3">HuuTho_Week8</span><span class="s4">\\</span><span class="s3">panorama3.jpg'</span><span class="s2">)</span>
+<span class="s2">img2 = cv2.imread(</span><span class="s3">'D:</span><span class="s4">\\</span><span class="s3">CoVi_OnThi</span><span class="s4">\\</span><span class="s3">HuuTho_Week8</span><span class="s4">\\</span><span class="s3">Panorama4.jpg'</span><span class="s2">)</span>
+<span class="s2">img3 = cv2.imread(</span><span class="s3">'D:</span><span class="s4">\\</span><span class="s3">CoVi_OnThi</span><span class="s4">\\</span><span class="s3">HuuTho_Week8</span><span class="s4">\\</span><span class="s3">Panorama5.jpg'</span><span class="s2">)</span>
+
+<span class="s0"># Danh sách ảnh và kiểm tra tải thành công</span>
+<span class="s2">images = [img1, img2, img3]</span>
+<span class="s2">all_images_loaded = </span><span class="s1">True  </span><span class="s0"># Giả sử tất cả ảnh được tải thành công</span>
+
+<span class="s0"># Sử dụng SIFT để tìm điểm đặc trưng</span>
+<span class="s2">sift = cv2.SIFT_create()</span>
+<span class="s2">keypoints = []</span>
+<span class="s2">descriptors = []</span>
+
+<span class="s1">for </span><span class="s2">i, img </span><span class="s1">in </span><span class="s2">enumerate(images, start=</span><span class="s5">1</span><span class="s2">):</span>
+    <span class="s1">if </span><span class="s2">img </span><span class="s1">is None</span><span class="s2">:</span>
+        <span class="s2">print(</span><span class="s3">f&quot;Không thể tải ảnh số </span><span class="s4">{</span><span class="s2">i</span><span class="s4">}</span><span class="s3">&quot;</span><span class="s2">)</span>
+        <span class="s2">all_images_loaded = </span><span class="s1">False</span>
+    <span class="s1">else</span><span class="s2">:</span>
+        <span class="s2">kp, des = sift.detectAndCompute(img, </span><span class="s1">None</span><span class="s2">)</span>
+        <span class="s2">keypoints.append(kp)</span>
+        <span class="s2">descriptors.append(des)</span>
+        <span class="s2">img_with_kp = cv2.drawKeypoints(img, kp, </span><span class="s1">None</span><span class="s2">)</span>
+        <span class="s2">plt.imshow(cv2.cvtColor(img_with_kp, cv2.COLOR_BGR2RGB))</span>
+        <span class="s2">plt.title(</span><span class="s3">f'Ảnh số </span><span class="s4">{</span><span class="s2">i</span><span class="s4">} </span><span class="s3">với điểm đặc trưng'</span><span class="s2">)</span>
+        <span class="s2">plt.show()</span>
+        <span class="s2">print(</span><span class="s3">f&quot;Số điểm đặc trưng trong ảnh số </span><span class="s4">{</span><span class="s2">i</span><span class="s4">}</span><span class="s3">: </span><span class="s4">{</span><span class="s2">len(kp)</span><span class="s4">}</span><span class="s3">&quot;</span><span class="s2">)</span>
+
+<span class="s0"># Chỉ tiếp tục nếu tất cả ảnh đã được tải thành công</span>
+<span class="s1">if </span><span class="s2">all_images_loaded:</span>
+    <span class="s0"># Sử dụng BFMatcher để so khớp điểm đặc trưng giữa các cặp ảnh</span>
+    <span class="s2">bf = cv2.BFMatcher()</span>
+    <span class="s1">for </span><span class="s2">i </span><span class="s1">in </span><span class="s2">range(len(images) - </span><span class="s5">1</span><span class="s2">):</span>
+        <span class="s2">matches = bf.knnMatch(descriptors[i], descriptors[i+</span><span class="s5">1</span><span class="s2">], k=</span><span class="s5">2</span><span class="s2">)</span>
+        <span class="s0"># Áp dụng Low's ratio test</span>
+        <span class="s2">good = []</span>
+        <span class="s1">for </span><span class="s2">m, n </span><span class="s1">in </span><span class="s2">matches:</span>
+            <span class="s1">if </span><span class="s2">m.distance &lt; </span><span class="s5">0.75 </span><span class="s2">* n.distance:</span>
+                <span class="s2">good.append(m)</span>
+        <span class="s2">print(</span><span class="s3">f&quot;Số matches tốt giữa ảnh </span><span class="s4">{</span><span class="s2">i+</span><span class="s5">1</span><span class="s4">} </span><span class="s3">và </span><span class="s4">{</span><span class="s2">i+</span><span class="s5">2</span><span class="s4">}</span><span class="s3">: </span><span class="s4">{</span><span class="s2">len(good)</span><span class="s4">}</span><span class="s3">&quot;</span><span class="s2">)</span>
+
+    <span class="s0"># Khởi tạo Stitcher với cấu hình tùy chỉnh</span>
+    <span class="s2">stitcher = cv2.Stitcher_create()</span>
+    <span class="s2">stitcher.setPanoConfidenceThresh(</span><span class="s5">0.6</span><span class="s2">)  </span><span class="s0"># Điều chỉnh ngưỡng tin cậy</span>
+
+    <span class="s0"># Thực hiện ghép ảnh</span>
+    <span class="s2">ret, pano = stitcher.stitch(images)</span>
+
+    <span class="s1">if </span><span class="s2">ret == cv2.Stitcher_OK:</span>
+        <span class="s0"># Hiển thị ảnh toàn cảnh</span>
+        <span class="s2">plt.imshow(cv2.cvtColor(pano, cv2.COLOR_BGR2RGB))</span>
+        <span class="s2">plt.title(</span><span class="s3">'Ảnh toàn cảnh'</span><span class="s2">)</span>
+        <span class="s2">plt.axis(</span><span class="s3">'off'</span><span class="s2">)</span>
+        <span class="s2">plt.show()</span>
+    <span class="s1">else</span><span class="s2">:</span>
+        <span class="s2">print(</span><span class="s3">&quot;Ghép ảnh thất bại, mã lỗi:&quot;</span><span class="s2">, ret)</span>
+<span class="s1">else</span><span class="s2">:</span>
+    <span class="s2">print(</span><span class="s3">&quot;Một hoặc nhiều ảnh không được tải lên thành công, kiểm tra lại đường dẫn hoặc tên file.&quot;</span><span class="s2">)</span>
+<span class="s0">#%% 
+</span><span class="s1">import </span><span class="s2">cv2</span>
+<span class="s1">import </span><span class="s2">numpy </span><span class="s1">as </span><span class="s2">np</span>
+<span class="s1">import </span><span class="s2">matplotlib.pyplot </span><span class="s1">as </span><span class="s2">plt</span>
+
+<span class="s0"># Đọc các hình ảnh</span>
+<span class="s2">img1 = cv2.imread(</span><span class="s3">'D:</span><span class="s4">\\</span><span class="s3">CoVi_OnThi</span><span class="s4">\\</span><span class="s3">HuuTho_Week8</span><span class="s4">\\</span><span class="s3">panorama6.png'</span><span class="s2">)</span>
+<span class="s2">img2 = cv2.imread(</span><span class="s3">'D:</span><span class="s4">\\</span><span class="s3">CoVi_OnThi</span><span class="s4">\\</span><span class="s3">HuuTho_Week8</span><span class="s4">\\</span><span class="s3">Panorama7.png'</span><span class="s2">)</span>
+<span class="s2">img3 = cv2.imread(</span><span class="s3">'D:</span><span class="s4">\\</span><span class="s3">CoVi_OnThi</span><span class="s4">\\</span><span class="s3">HuuTho_Week8</span><span class="s4">\\</span><span class="s3">Panorama8.png'</span><span class="s2">)</span>
+
+<span class="s0"># Danh sách ảnh và kiểm tra tải thành công</span>
+<span class="s2">images = [img1, img2, img3]</span>
+<span class="s2">all_images_loaded = </span><span class="s1">True  </span><span class="s0"># Giả sử tất cả ảnh được tải thành công</span>
+
+<span class="s0"># Sử dụng SIFT để tìm điểm đặc trưng</span>
+<span class="s2">sift = cv2.SIFT_create()</span>
+<span class="s2">keypoints = []</span>
+<span class="s2">descriptors = []</span>
+
+<span class="s1">for </span><span class="s2">i, img </span><span class="s1">in </span><span class="s2">enumerate(images, start=</span><span class="s5">1</span><span class="s2">):</span>
+    <span class="s1">if </span><span class="s2">img </span><span class="s1">is None</span><span class="s2">:</span>
+        <span class="s2">print(</span><span class="s3">f&quot;Không thể tải ảnh số </span><span class="s4">{</span><span class="s2">i</span><span class="s4">}</span><span class="s3">&quot;</span><span class="s2">)</span>
+        <span class="s2">all_images_loaded = </span><span class="s1">False</span>
+    <span class="s1">else</span><span class="s2">:</span>
+        <span class="s2">kp, des = sift.detectAndCompute(img, </span><span class="s1">None</span><span class="s2">)</span>
+        <span class="s2">keypoints.append(kp)</span>
+        <span class="s2">descriptors.append(des)</span>
+        <span class="s2">img_with_kp = cv2.drawKeypoints(img, kp, </span><span class="s1">None</span><span class="s2">)</span>
+        <span class="s2">plt.imshow(cv2.cvtColor(img_with_kp, cv2.COLOR_BGR2RGB))</span>
+        <span class="s2">plt.title(</span><span class="s3">f'Ảnh số </span><span class="s4">{</span><span class="s2">i</span><span class="s4">} </span><span class="s3">với điểm đặc trưng'</span><span class="s2">)</span>
+        <span class="s2">plt.show()</span>
+        <span class="s2">print(</span><span class="s3">f&quot;Số điểm đặc trưng trong ảnh số </span><span class="s4">{</span><span class="s2">i</span><span class="s4">}</span><span class="s3">: </span><span class="s4">{</span><span class="s2">len(kp)</span><span class="s4">}</span><span class="s3">&quot;</span><span class="s2">)</span>
+
+<span class="s0"># Chỉ tiếp tục nếu tất cả ảnh đã được tải thành công</span>
+<span class="s1">if </span><span class="s2">all_images_loaded:</span>
+    <span class="s0"># Sử dụng BFMatcher để so khớp điểm đặc trưng giữa các cặp ảnh</span>
+    <span class="s2">bf = cv2.BFMatcher()</span>
+    <span class="s1">for </span><span class="s2">i </span><span class="s1">in </span><span class="s2">range(len(images) - </span><span class="s5">1</span><span class="s2">):</span>
+        <span class="s2">matches = bf.knnMatch(descriptors[i], descriptors[i+</span><span class="s5">1</span><span class="s2">], k=</span><span class="s5">2</span><span class="s2">)</span>
+        <span class="s0"># Áp dụng Low's ratio test</span>
+        <span class="s2">good = []</span>
+        <span class="s1">for </span><span class="s2">m, n </span><span class="s1">in </span><span class="s2">matches:</span>
+            <span class="s1">if </span><span class="s2">m.distance &lt; </span><span class="s5">0.75 </span><span class="s2">* n.distance:</span>
+                <span class="s2">good.append(m)</span>
+        <span class="s2">print(</span><span class="s3">f&quot;Số matches tốt giữa ảnh </span><span class="s4">{</span><span class="s2">i+</span><span class="s5">1</span><span class="s4">} </span><span class="s3">và </span><span class="s4">{</span><span class="s2">i+</span><span class="s5">2</span><span class="s4">}</span><span class="s3">: </span><span class="s4">{</span><span class="s2">len(good)</span><span class="s4">}</span><span class="s3">&quot;</span><span class="s2">)</span>
+
+    <span class="s0"># Khởi tạo Stitcher với cấu hình tùy chỉnh</span>
+    <span class="s2">stitcher = cv2.Stitcher_create()</span>
+    <span class="s2">stitcher.setPanoConfidenceThresh(</span><span class="s5">0.6</span><span class="s2">)  </span><span class="s0"># Điều chỉnh ngưỡng tin cậy</span>
+
+    <span class="s0"># Thực hiện ghép ảnh</span>
+    <span class="s2">ret, pano = stitcher.stitch(images)</span>
+
+    <span class="s1">if </span><span class="s2">ret == cv2.Stitcher_OK:</span>
+        <span class="s0"># Hiển thị ảnh toàn cảnh</span>
+        <span class="s2">plt.imshow(cv2.cvtColor(pano, cv2.COLOR_BGR2RGB))</span>
+        <span class="s2">plt.title(</span><span class="s3">'Ảnh toàn cảnh'</span><span class="s2">)</span>
+        <span class="s2">plt.axis(</span><span class="s3">'off'</span><span class="s2">)</span>
+        <span class="s2">plt.show()</span>
+    <span class="s1">else</span><span class="s2">:</span>
+        <span class="s2">print(</span><span class="s3">&quot;Ghép ảnh thất bại, mã lỗi:&quot;</span><span class="s2">, ret)</span>
+<span class="s1">else</span><span class="s2">:</span>
+    <span class="s2">print(</span><span class="s3">&quot;Một hoặc nhiều ảnh không được tải lên thành công, kiểm tra lại đường dẫn hoặc tên file.&quot;</span><span class="s2">)</span></pre>
+</body>
+</html>
