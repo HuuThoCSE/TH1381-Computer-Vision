@@ -3,5 +3,5 @@
 # Cài đặt môi trường 
 
 ```python
-pip install opencv numpy matplotlib ipykernel jupyter
+pip install opencv-python numpy matplotlib ipykernel jupyter
 ```
