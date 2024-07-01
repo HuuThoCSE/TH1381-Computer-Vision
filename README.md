@@ -14,5 +14,5 @@ Các bước:
 - Chúc bạn mai mắn ^^
 
 ```python
-pip install opencv-python numpy matplotlib ipykernel jupyter
+python -m pip install --upgrade pip && pip install opencv-python numpy matplotlib ipykernel jupyter nbconvert
 ```
